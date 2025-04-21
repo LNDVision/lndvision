@@ -1,0 +1,67 @@
+# Python virtual environments
+.venv/
+venv/
+ENV/
+
+# Python cache and build
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter and notebook checkpoints
+.ipynb_checkpoints/
+
+# SQLite DB and local storage
+*.db
+*.sqlite3
+storage/
+
+# VSCode and IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node.js build artifacts
+ui/node_modules/
+ui/dist/
+ui/.vite/
+
+# React build
+ui/build/
+
+# Logs
+*.log
+backend.log
+frontend.log
+nohup.out
+
+# Go build artifacts
+collector/collector
+collector/*.exe
+collector/*.test
+*.out
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+
+# Model artifacts
+model/*.joblib
+model/*.pkl
+
+# Macaroons/keys/certs (never commit these!)
+*.macaroon
+*.cert
+*.pem
+*.key
+
+# Env files
+.env
+.env.*

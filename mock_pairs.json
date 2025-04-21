@@ -1,0 +1,50 @@
+[
+  {
+    "node_from": "032ae3168ba52314da581d6b6693c562b437a9cf805933d4d69e7801547e07302e",
+    "node_to":   "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+    "history":   {
+      "fail_time":        1745054692,
+      "fail_amt_sat":     224037,
+      "fail_amt_msat":    224037738,
+      "success_time":     0,
+      "success_amt_sat":  0,
+      "success_amt_msat": 0
+    }
+  },
+  {
+    "node_from": "032ae3168ba52314da581d6b6693c562b437a9cf805933d4d69e7801547e07302e",
+    "node_to":   "02f6155b106a9f92a13738833ec7e25da58fab1fdef3ac085571c3984bb277d547",
+    "history":   {
+      "fail_time":        1744493009,
+      "fail_amt_sat":     235817,
+      "fail_amt_msat":    235817174,
+      "success_time":     0,
+      "success_amt_sat":  0,
+      "success_amt_msat": 0
+    }
+  },
+  {
+    "node_from": "032ae3168ba52314da581d6b6693c562b437a9cf805933d4d69e7801547e07302e",
+    "node_to":   "03e81689bfd18d0accb28d720ed222209b1a5f2c6825308772beac75b1fe35d491",
+    "history":   {
+      "fail_time":        1745161161,
+      "fail_amt_sat":     214783,
+      "fail_amt_msat":    214783331,
+      "success_time":     0,
+      "success_amt_sat":  0,
+      "success_amt_msat": 0
+    }
+  },
+  {
+    "node_from": "02f6155b106a9f92a13738833ec7e25da58fab1fdef3ac085571c3984bb277d547",
+    "node_to":   "03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f",
+    "history":   {
+      "fail_time":        1745054700,
+      "fail_amt_sat":     10000,
+      "fail_amt_msat":    10000000,
+      "success_time":     1745054800,
+      "success_amt_sat":  500000,
+      "success_amt_msat": 500000000
+    }
+  }
+]
