@@ -55,6 +55,7 @@ Thumbs.db
 # Model artifacts
 model/*.joblib
 model/*.pkl
+model/mc_model.joblib
 
 # Macaroons/keys/certs (never commit these!)
 *.macaroon

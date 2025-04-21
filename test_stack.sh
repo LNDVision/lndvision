@@ -14,7 +14,7 @@ pip install --upgrade pip > /dev/null
 pip install -r etl/requirements.txt -r model/requirements.txt -r api/requirements.txt
 
 # 1. Seed the database FOR TESTING
-#python seed_db.py
+python seed_db.py
 
 # 2. Train the model
 python model/train.py
