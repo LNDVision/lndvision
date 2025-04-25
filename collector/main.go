@@ -24,7 +24,7 @@ const (
 	lndAddr   = "localhost:10009"
 	tlsCert   = "/home/USER/.lnd/tls.cert"
 	macaroon  = "/home/USER/.lnd/data/chain/bitcoin/mainnet/admin.macaroon"
-	dbPath    = "../storage/mc.db"
+	dbPath    = "storage/mc.db"
 	pollEvery = 5 * time.Minute
 )
 
