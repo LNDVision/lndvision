@@ -44,4 +44,15 @@ def get_pairs():
     out = []
     for _, row in df.iterrows():
         out.append({"id": row["pair_id"], "rate": row["success_rate"] if row["success_rate"] is not None else 0.0})
+    import math
+    def clean_nans(obj):
+        if isinstance(obj, float) and math.isnan(obj):
+            return None
+        elif isinstance(obj, dict):
+            return {k: clean_nans(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [clean_nans(x) for x in obj]
+        else:
+            return obj
+    out = clean_nans(out)
     return JSONResponse(content=out)
