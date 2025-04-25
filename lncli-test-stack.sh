@@ -9,6 +9,14 @@ set -e
 #   LND_TLSCERT=~/.lnd/tls.cert
 #   LND_MACAROON=~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 #   LNCLI=lncli (or path to lncli binary)
+if [ -f ~/projects/lndvision/.env ]; then
+    export $(grep -v '^#' .env | xargs)
+else
+    echo "Error: .env file not found."
+    exit 1
+fi
+
+
 
 : "${LND_DIR:?Set LND_DIR to your lnd directory}"
 : "${NETWORK:?Set NETWORK to your lnd network}"
@@ -24,6 +32,30 @@ mkdir -p storage
 if [ $? -ne 0 ]; then
   echo "[ERROR] Failed to create storage directory."
   exit 1
+fi
+
+echo "[PREP] Ensuring pair_data table exists in storage/mc.db..."
+sqlite3 storage/mc.db <<EOF
+CREATE TABLE IF NOT EXISTS pair_data (
+    pair_id TEXT PRIMARY KEY,
+    last_fail_time INTEGER,
+    last_success_time INTEGER,
+    success_amt_sat INTEGER,
+    fail_amt_sat INTEGER
+);
+EOF
+if [ $? -ne 0 ]; then
+  echo "[ERROR] Failed to create pair_data table in storage/mc.db."
+  exit 1
+fi
+
+echo "[PREP] Starting Python ETL script in background..."
+if [ -f etl/etl.py ]; then
+  .venv/bin/python etl/etl.py &
+  ETL_PID=$!
+  echo "[PREP] ETL script started with PID $ETL_PID."
+else
+  echo "[WARNING] etl/etl.py not found, skipping ETL startup."
 fi
 
 echo "[STEP 1] Checking lncli connectivity..."
