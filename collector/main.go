@@ -89,10 +89,11 @@ func poll(ctx context.Context, c routerrpc.RouterClient, db *sql.DB) error {
         (pair_id,last_fail_time,last_success_time,success_amt_sat,fail_amt_sat)
         VALUES (?,?,?,?,?)
         ON CONFLICT(pair_id) DO UPDATE SET
-          last_fail_time=?,
-          last_success_time=?,
-          success_amt_sat=?,
-          fail_amt_sat=?`)
+          last_fail_time=excluded.last_fail_time,
+          last_success_time=excluded.last_success_time,
+          success_amt_sat=excluded.success_amt_sat,
+          fail_amt_sat=excluded.fail_amt_sat
+    `)
 	if err != nil {
 		return fmt.Errorf("tx.Prepare failed: %w", err)
 	}
@@ -104,11 +105,7 @@ func poll(ctx context.Context, c routerrpc.RouterClient, db *sql.DB) error {
 		failMs := h.FailTime * 1000 // convert sec → ms for DB
 		successMs := h.SuccessTime * 1000
 
-		_, err := stmt.Exec(id,
-			failMs, successMs,
-			h.SuccessAmtSat, h.FailAmtSat,
-			failMs, successMs,
-			h.SuccessAmtSat, h.FailAmtSat)
+		_, err := stmt.Exec(id, failMs, successMs, h.SuccessAmtSat, h.FailAmtSat)
 		if err != nil {
 			return fmt.Errorf("stmt.Exec failed for pair %s: %w", id, err)
 		}
