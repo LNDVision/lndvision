@@ -6,7 +6,7 @@ export default function Charts({ data, type = "line", label }) {
   // Show a simple SVG chart if data is present, else placeholder
   if (Array.isArray(data) && data.length > 1) {
     // Normalize data for SVG
-    const values = data.map(d => typeof d === "number" ? d : d.value);
+    const values = data.map(d => typeof d === "number" ? d : 0);
     const max = Math.max(...values);
     const min = Math.min(...values);
     const w = 220, h = 60, pad = 6;

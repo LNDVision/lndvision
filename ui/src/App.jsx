@@ -16,7 +16,7 @@ function App() {
   const [problemCount, setProblemCount] = useState(0);
 
   useEffect(() => {
-    axios.get("/api/pairs").then((r) => {
+    axios.get("http://localhost:8000/pairs").then((r) => {
       setPairs(r.data);
       setSelectedPair(null);
     });

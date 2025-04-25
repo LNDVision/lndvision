@@ -11,41 +11,36 @@ function getSuccessColor(rate) {
 }
 
 export default function PairsTable({ pairs, onSelect, selectedPairId }) {
+  console.log(pairs)
   return (
     <table className="pairs-table">
       <thead>
         <tr>
-          <th>Peer</th>
+          <th>Peers</th>
           <th>Success Rate</th>
-          <th>Success Amt (sat)</th>
-          <th>Fail Amt (sat)</th>
-          <th>Last Success</th>
         </tr>
       </thead>
       <tbody>
         {pairs.map((pair) => (
           <tr
-            key={pair.pair_id}
+            key={pair.id}
             className={selectedPairId === pair.pair_id ? "selected" : ""}
             onClick={() => onSelect(pair)}
             style={{ cursor: "pointer" }}
           >
-            <td>{pair.alias || pair.peer || pair.pair_id}</td>
+            <td>{pair.id}</td>
             <td>
               <span
                 style={{
-                  color: getSuccessColor(pair.success_rate),
-                  fontWeight: pair.success_rate < 0.2 ? "bold" : "normal",
+                  color: getSuccessColor(pair.rate),
+                  fontWeight: pair.rate < 0.2 ? "bold" : "normal",
                 }}
               >
-                {pair.success_rate !== null && pair.success_rate !== undefined
-                  ? `${Math.round(pair.success_rate * 100)}%`
+                {pair.rate !== null && pair.rate !== undefined
+                  ? `${Math.round(pair.rate * 100)}%`
                   : "N/A"}
               </span>
             </td>
-            <td>{pair.success_amt_sat}</td>
-            <td>{pair.fail_amt_sat}</td>
-            <td>{pair.last_success_time ? new Date(pair.last_success_time).toLocaleString() : "N/A"}</td>
           </tr>
         ))}
       </tbody>

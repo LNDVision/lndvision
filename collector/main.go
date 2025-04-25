@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	_ "modernc.org/sqlite"
+	"github.com/joho/godotenv" // Import the package
 
 	macaroons "github.com/lightningnetwork/lnd/macaroons"
 	gmacaroon "gopkg.in/macaroon.v2"
@@ -23,14 +24,26 @@ import (
 
 
 const (
-	lndAddr   = "localhost:10009"
-	tlsCert   = "/home/USER/.lnd/tls.cert"
-	macaroon  = "/home/USER/.lnd/data/chain/bitcoin/mainnet/admin.macaroon"
 	dbPath    = "storage/mc.db"
 	pollEvery = 5 * time.Minute
 )
 
 func main() {
+	err := godotenv.Load() // You can pass filenames like godotenv.Load(".env.local", ".env")
+	if err != nil {
+		// This often means the .env file was not found.
+		// In production, you might rely solely on system env vars, so this might not be a fatal error.
+		// In development, you likely want the .env file.
+		log.Println("Warning: Error loading .env file:", err)
+		// If .env is *required* for your app to run, use log.Fatalf:
+		// log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	// Now you can access the environment variables using os.Getenv
+	lndAddr := os.Getenv("LND_RPC")
+	tlsCert := os.Getenv("LND_TLSCERT")
+	macaroon := os.Getenv("LND_MACAROON")
+
 	creds, err := loadTLS(tlsCert)
 	if err != nil {
 		log.Fatal(err)
