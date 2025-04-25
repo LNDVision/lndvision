@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc/credentials"
 	_ "modernc.org/sqlite"
 
+	macaroons "github.com/lightningnetwork/lnd/macaroons"
+	gmacaroon "gopkg.in/macaroon.v2"
 	routerrpc "github.com/lightningnetwork/lnd/lnrpc/routerrpc"
 )
 
@@ -31,7 +33,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conn, err := grpc.Dial(lndAddr, grpc.WithTransportCredentials(creds))
+	macBytes, err := os.ReadFile(macaroon)
+	if err != nil {
+		log.Fatalf("cannot read macaroon: %v", err)
+	}
+	mac := &gmacaroon.Macaroon{}
+	if err := mac.UnmarshalBinary(macBytes); err != nil {
+		log.Fatalf("cannot decode macaroon: %v", err)
+	}
+	macCred, err := macaroons.NewMacaroonCredential(mac)
+	if err != nil {
+		log.Fatalf("cannot create macaroon credential: %v", err)
+	}
+
+	conn, err := grpc.Dial(
+		lndAddr,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithPerRPCCredentials(macCred),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

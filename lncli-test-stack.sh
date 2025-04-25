@@ -40,8 +40,13 @@ else
   echo "[STEP 3] querymc OK."
 fi
 
-echo "[STEP 4] Starting Go collector (if present)..."
+echo "[STEP 4] Building Go collector..."
+if ! (cd collector && go build -o collector); then
+  echo "[ERROR] Failed to build Go collector."
+  exit 1
+fi
 if [ -x collector/collector ]; then
+  echo "[STEP 4] Starting Go collector..."
   collector/collector &
   COLLECTOR_PID=$!
   sleep 5
@@ -52,7 +57,8 @@ if [ -x collector/collector ]; then
     exit 1
   fi
 else
-  echo "[WARNING] Go collector binary not found. Please build it in collector/ first."
+  echo "[ERROR] Go collector binary not found after build."
+  exit 1
 fi
 
 echo "[STEP 5] Setting up Python virtual environment..."
