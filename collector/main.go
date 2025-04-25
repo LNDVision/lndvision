@@ -18,7 +18,9 @@ import (
 	macaroons "github.com/lightningnetwork/lnd/macaroons"
 	gmacaroon "gopkg.in/macaroon.v2"
 	routerrpc "github.com/lightningnetwork/lnd/lnrpc/routerrpc"
+	lnrpc "github.com/lightningnetwork/lnd/lnrpc"
 )
+
 
 const (
 	lndAddr   = "localhost:10009"
@@ -56,6 +58,7 @@ func main() {
 		log.Fatal(err)
 	}
 	client := routerrpc.NewRouterClient(conn)
+	lightning := lnrpc.NewLightningClient(conn)
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -63,16 +66,23 @@ func main() {
 	}
 
 	ctx := context.Background()
+	// Ensure alias cache table exists
+	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS node_alias (
+		pubkey TEXT PRIMARY KEY,
+		alias TEXT
+	)`)
+
 	ticker := time.NewTicker(pollEvery)
 	for {
-		if err := poll(ctx, client, db); err != nil {
+		if err := poll(ctx, client, lightning, db); err != nil {
 			log.Println("poll:", err)
 		}
 		<-ticker.C
 	}
 }
 
-func poll(ctx context.Context, c routerrpc.RouterClient, db *sql.DB) error {
+
+func poll(ctx context.Context, c routerrpc.RouterClient, lightning lnrpc.LightningClient, db *sql.DB) error {
 	resp, err := c.QueryMissionControl(ctx, &routerrpc.QueryMissionControlRequest{})
 	if err != nil {
 		return fmt.Errorf("QueryMissionControl failed: %w", err)
@@ -100,10 +110,24 @@ func poll(ctx context.Context, c routerrpc.RouterClient, db *sql.DB) error {
 	defer stmt.Close()
 
 	for _, p := range resp.Pairs {
-		id := hex.EncodeToString(p.NodeFrom) + "-" + hex.EncodeToString(p.NodeTo)
+		fromPub := hex.EncodeToString(p.NodeFrom)
+		toPub := hex.EncodeToString(p.NodeTo)
+		id := fromPub + "-" + toPub
 		h := p.History
 		failMs := h.FailTime * 1000 // convert sec → ms for DB
 		successMs := h.SuccessTime * 1000
+
+		// Cache aliases for both nodes
+		for _, pub := range []string{fromPub, toPub} {
+			var alias string
+			db.QueryRow(`SELECT alias FROM node_alias WHERE pubkey = ?`, pub).Scan(&alias)
+			if alias == "" {
+				alias, err := getNodeAlias(ctx, lightning, pub)
+				if err == nil && alias != "" {
+					_, _ = db.Exec(`INSERT OR REPLACE INTO node_alias(pubkey, alias) VALUES (?, ?)`, pub, alias)
+				}
+			}
+		}
 
 		_, err := stmt.Exec(id, failMs, successMs, h.SuccessAmtSat, h.FailAmtSat)
 		if err != nil {

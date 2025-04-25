@@ -33,17 +33,31 @@ def get_pairs():
     con = sqlite3.connect(os.path.join(os.path.dirname(__file__), "..", "storage", "mc.db"))
     df = pd.read_sql_query("""
         SELECT
-          pair_id,
-          success_amt_sat,
-          fail_amt_sat,
-          CASE WHEN success_amt_sat+fail_amt_sat=0 THEN NULL
-               ELSE CAST(success_amt_sat AS FLOAT)/(success_amt_sat+fail_amt_sat) END AS success_rate
-        FROM pair_data
+          p.pair_id,
+          p.success_amt_sat,
+          p.fail_amt_sat,
+          CASE WHEN p.success_amt_sat+p.fail_amt_sat=0 THEN NULL
+               ELSE CAST(p.success_amt_sat AS FLOAT)/(p.success_amt_sat+p.fail_amt_sat) END AS success_rate,
+          p.pair_id as pair_id_str,
+          substr(p.pair_id, 1, instr(p.pair_id, '-')-1) as from_pubkey,
+          substr(p.pair_id, instr(p.pair_id, '-')+1) as to_pubkey,
+          a1.alias as from_alias,
+          a2.alias as to_alias
+        FROM pair_data p
+        LEFT JOIN node_alias a1 ON a1.pubkey = substr(p.pair_id, 1, instr(p.pair_id, '-')-1)
+        LEFT JOIN node_alias a2 ON a2.pubkey = substr(p.pair_id, instr(p.pair_id, '-')+1)
     """, con)
     con.close()
     out = []
     for _, row in df.iterrows():
-        out.append({"id": row["pair_id"], "rate": row["success_rate"] if row["success_rate"] is not None else 0.0})
+        out.append({
+            "id": row["pair_id"],
+            "rate": row["success_rate"] if row["success_rate"] is not None else 0.0,
+            "from_pubkey": row["from_pubkey"],
+            "to_pubkey": row["to_pubkey"],
+            "from_alias": row["from_alias"],
+            "to_alias": row["to_alias"]
+        })
     import math
     def clean_nans(obj):
         if isinstance(obj, float) and math.isnan(obj):
