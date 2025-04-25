@@ -13,6 +13,7 @@ while True:
         FROM pair_data
     """, con)
 
+    df['success_rate'] = pd.to_numeric(df['success_rate'], errors='coerce')
     worst = df.nsmallest(10, 'success_rate')
     print("\n=== Worst 10 pairs ===")
     print(worst[['pair_id','success_rate']])
