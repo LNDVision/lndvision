@@ -19,9 +19,16 @@ set -e
 
 export LND_DIR LND_RPC LND_TLSCERT LND_MACAROON NETWORK
 
+echo "[PREP] Ensuring storage directory exists..."
+mkdir -p storage
+if [ $? -ne 0 ]; then
+  echo "[ERROR] Failed to create storage directory."
+  exit 1
+fi
+
 echo "[STEP 1] Checking lncli connectivity..."
-if ! $LNCLI --network=$NETWORK --rpcserver=$LND_RPC --macaroonpath=$LND_MACAROON --tlscertpath=$LND_TLSCERT getinfo; then
-  echo "[ERROR] lncli getinfo failed. Check your LND credentials and connection."
+if ! $LNCLI --network=$NETWORK --rpcserver=$LND_RPC --macaroonpath=$LND_MACAROON --tlscertpath=$LND_TLSCERT getinfo > /dev/null; then
+  echo "[ERROR] lncli connectivity failed. Check your LND credentials and environment variables."
   exit 1
 fi
 echo "[STEP 1] lncli connectivity OK."
