@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -74,11 +75,16 @@ func main() {
 func poll(ctx context.Context, c routerrpc.RouterClient, db *sql.DB) error {
 	resp, err := c.QueryMissionControl(ctx, &routerrpc.QueryMissionControlRequest{})
 	if err != nil {
-		return err
+		return fmt.Errorf("QueryMissionControl failed: %w", err)
 	}
 
-	tx, _ := db.Begin()
-	stmt, _ := tx.Prepare(`
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("db.Begin failed: %w", err)
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`
         INSERT INTO pair_data
         (pair_id,last_fail_time,last_success_time,success_amt_sat,fail_amt_sat)
         VALUES (?,?,?,?,?)
@@ -87,20 +93,30 @@ func poll(ctx context.Context, c routerrpc.RouterClient, db *sql.DB) error {
           last_success_time=?,
           success_amt_sat=?,
           fail_amt_sat=?`)
+	if err != nil {
+		return fmt.Errorf("tx.Prepare failed: %w", err)
+	}
+	defer stmt.Close()
+
 	for _, p := range resp.Pairs {
 		id := hex.EncodeToString(p.NodeFrom) + "-" + hex.EncodeToString(p.NodeTo)
-
 		h := p.History
 		failMs := h.FailTime * 1000 // convert sec → ms for DB
 		successMs := h.SuccessTime * 1000
 
-		_, _ = stmt.Exec(id,
+		_, err := stmt.Exec(id,
 			failMs, successMs,
 			h.SuccessAmtSat, h.FailAmtSat,
 			failMs, successMs,
 			h.SuccessAmtSat, h.FailAmtSat)
+		if err != nil {
+			return fmt.Errorf("stmt.Exec failed for pair %s: %w", id, err)
+		}
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("tx.Commit failed: %w", err)
+	}
+	return nil
 }
 
 func loadTLS(path string) (credentials.TransportCredentials, error) {
