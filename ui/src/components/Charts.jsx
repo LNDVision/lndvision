@@ -1,38 +1,72 @@
 import React from "react";
 import PropTypes from "prop-types";
-// Styling from dashboard.css
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList,
+} from "recharts";
 
-export default function Charts({ data, type = "line", label }) {
-  // Show a simple SVG chart if data is present, else placeholder
-  if (Array.isArray(data) && data.length > 1) {
-    // Normalize data for SVG
-    const values = data.map(d => typeof d === "number" ? d : 0);
-    const max = Math.max(...values);
-    const min = Math.min(...values);
-    const w = 220, h = 60, pad = 6;
-    const points = values.map((v, i) => {
-      const x = pad + (w - 2 * pad) * (i / (values.length - 1));
-      const y = pad + (h - 2 * pad) * (1 - (v - min) / (max - min || 1));
-      return `${x},${y}`;
-    }).join(" ");
+export default function Charts({ data, type = "distribution", label }) {
+  if (!Array.isArray(data) || data.length === 0) {
+    return <div className="charts-placeholder">[Chart: {type} — No data]</div>;
+  }
+
+  // Distribution histogram for success rates (0-1 bucketed)
+  if (type === "distribution") {
+    // Bucket into 10 bins (0-0.1, 0.1-0.2, ... 0.9-1.0)
+    const bins = Array.from({ length: 10 }, (_, i) => ({
+      bin: `${(i * 10)}-${(i + 1) * 10}%`,
+      count: 0,
+    }));
+    data.forEach((val) => {
+      if (typeof val === "number" && !isNaN(val)) {
+        const idx = Math.min(Math.floor(val * 10), 9);
+        bins[idx].count += 1;
+      }
+    });
     return (
-      <div className="charts-placeholder" style={{ background: "#fafbfc" }}>
-        <svg width={w} height={h} style={{ display: "block", margin: "0 auto" }}>
-          <polyline
-            fill="none"
-            stroke="#1976d2"
-            strokeWidth="2"
-            points={points}
-          />
-        </svg>
-        {label && <div style={{ color: "#333", fontSize: 13 }}>{label}</div>}
+      <div className="charts-placeholder" style={{ background: "#fafbfc", padding: 8 }}>
+        <div style={{ fontWeight: 500, marginBottom: 4 }}>{label || "Success Rate Distribution"}</div>
+        <ResponsiveContainer width="100%" height={120}>
+          <BarChart data={bins} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="bin" tick={{ fontSize: 11 }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+            <Tooltip />
+            <Bar dataKey="count" fill="#1976d2">
+              <LabelList dataKey="count" position="top" />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     );
   }
+
+  // Success vs Fail bar chart
+  if (type === "bar" && data.length === 2) {
+    const barData = [
+      { name: "Success", value: data[0] },
+      { name: "Fail", value: data[1] },
+    ];
+    return (
+      <div className="charts-placeholder" style={{ background: "#fafbfc", padding: 8 }}>
+        <div style={{ fontWeight: 500, marginBottom: 4 }}>{label || "Success vs Fail"}</div>
+        <ResponsiveContainer width="100%" height={120}>
+          <BarChart data={barData} layout="vertical" margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis type="number" tick={{ fontSize: 11 }} />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={60} />
+            <Tooltip />
+            <Bar dataKey="value" fill="#43a047">
+              <LabelList dataKey="value" position="right" />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  // Fallback: simple list
   return (
-    <div className="charts-placeholder">
-      [Chart: {type} — No data]
-    </div>
+    <div className="charts-placeholder">[Chart: {type} — Data: {JSON.stringify(data)}]</div>
   );
 }
 
